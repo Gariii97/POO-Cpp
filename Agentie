@@ -1,0 +1,269 @@
+#include<iostream>
+#include<conio.h>
+using namespace std;
+class Lista;
+
+class agentie
+{
+private:
+	int tip,pret, tenis;
+	char nume[20];
+	agentie *urm;
+public:
+	agentie(int tp, char n[20], int p, int t)
+	{
+		tip=tp;
+		strcpy(nume,n);
+		pret=p;
+		tenis=t;
+		urm=NULL;
+	}
+	void virtual afisare()
+	{
+		cout<<"------------------\n";
+		if(tip==1)
+			cout<<"Tip=hotel\n";
+		else
+			cout<<"Tip=pensiune\n";
+		cout<<"Pret="<<pret<<"\n";
+		cout<<"Nume="<<nume<<"\n";
+		cout<<"Tenis="<<tenis<<"\n";
+	}
+	friend class Lista;
+};
+
+class hotel:public agentie
+{
+private:
+	int stele,piscina,sauna;
+public:
+	hotel(int tp, char n[20], int p, int t, int stars, int pisc, int sau):agentie(tp,n,p,t)
+	{
+		stele=stars;
+		piscina=pisc;
+		sauna=sau;
+	}
+	void afisare()
+	{
+		agentie::afisare();
+		cout<<"Stele="<<stele<<endl;
+		cout<<"Piscina="<<piscina<<endl;
+		cout<<"Sauna="<<sauna<<endl;
+	}
+	friend class Lista;
+};
+
+class pensiune:public agentie
+{
+private:
+	int margarete, gradina;
+public:
+	pensiune(int tp, char n[20], int p, int t, int marga, int grad):agentie(tp,n,p,t)
+	{
+		margarete=marga;
+		gradina=grad;
+	}
+
+	void afisare()
+	{
+		agentie::afisare();
+		cout<<"Margarete="<<margarete<<endl;
+		cout<<"Gradina="<<gradina<<endl;
+	}
+	friend class Lista;
+};
+
+class Lista
+{
+public:
+	agentie *head;
+	void adaugare(agentie *a);//adaugare in lista
+	void afisare_lista();
+	void stergere(char nume[20]);
+	void oferta_avantajoasa();
+};
+
+void Lista::adaugare(agentie *a)
+{
+	agentie *p;
+	p=head;
+	if(p==NULL)
+	{
+		head=a;
+	}
+	else
+	{
+		if(strcmp(a->nume,head->nume)<0)
+		{
+			a->urm=head;
+			head=a;
+		}
+		else
+		{
+			while(p->urm && strcmp(a->nume,p->urm->nume)>0)
+				p=p->urm;
+			a->urm=p->urm;
+			p->urm=a;
+		}
+	}
+}
+
+void Lista::afisare_lista()
+{
+	agentie *p;
+	p=head;
+	while(p!=NULL)
+	{
+		p->afisare();//se apeleaza afisarea corespunzatoare nodului curent
+		p=p->urm;
+	}
+}
+
+void introducere(Lista &l, int x)//introd informatii in noduri
+{
+	char nume[20];
+	int pret;
+	int tenis;
+	int stele;
+	int piscina;
+	int sauna;
+	int margarete;
+	int gradina;
+	agentie *p;
+
+	cout<<"Dati numele: ";
+	cin>>nume;
+	cout<<"Dati pretul camerei: ";
+	cin>>pret;
+	cout<<"Dati daca are teren de tenis[0/1]: ";
+	cin>>tenis;
+
+	if(x==1)//daca e hotel
+	{
+		hotel *h;
+		cout<<"Dati numarul de stele: ";
+		cin>>stele;
+		cout<<"Dati daca are piscina[0/1]: ";
+		cin>>piscina;
+		cout<<"Dati daca are sauna[0/1]: ";
+		cin>>sauna;
+		h=new hotel(1,nume, pret, tenis, stele, piscina, sauna);
+		//apelare constructor info citite
+		p=h;//cast pt clasa de baza
+		l.adaugare(p);//se adauga nodul
+	}
+	else if(x==2)//daca e pensiune
+	{
+		pensiune *pen;
+		cout<<"Dati nr de margarete: ";
+		cin>>margarete;
+		cout<<"Dati daca are gradina: ";
+		cin>>gradina;
+		pen=new pensiune(2,nume,pret, tenis, margarete, gradina);
+		p=pen;
+		l.adaugare(p);
+	}
+}
+
+void Lista::stergere(char nume[20])
+{
+	agentie *p;
+	agentie *aux;
+	p=head;
+	if(p==NULL)
+		cout<<"e nula";
+	else
+	{
+		if(strcmp(head->nume,nume)==0)
+		{
+			aux=head;
+			head=head->urm;
+			free(aux);
+		}
+		else
+		{
+			while(p->urm && strcmp(p->urm->nume,nume)!=0)
+				p=p->urm;
+			aux=p->urm;
+			p->urm=p->urm->urm;
+			free(aux);
+		}
+	}
+}
+
+void Lista::oferta_avantajoasa()
+{
+	int min=99, oferta;
+	char nume[20];
+	agentie *p;
+	hotel *h;
+	pensiune *pen;
+	p=head;
+	while(p)
+	{
+		if(p->tip==1)
+		{
+			h=(hotel *)p;
+			oferta=(h->stele)*(h->pret);
+		}
+		else if(p->tip==2)
+		{
+			pen=(pensiune *)p;
+			oferta=(pen->margarete)*(pen->pret);
+		}
+		if(oferta<min)
+		{
+			min=oferta;
+			strcpy(nume,p->nume);
+		}
+		p=p->urm;
+	}
+	cout<<"Oferta minima este: "<<min<<" a agentiei "<<nume<<endl;
+
+}
+
+int main()
+{
+	int opt;
+	Lista l;
+	l.head=NULL;
+	do
+	{
+		//system("CLS");
+		cout<<"\n\n";
+		cout<<"1.Ad. oferta hotel \n";
+		cout<<"2.Ad. oferta pensiune \n";
+		cout<<"3.Afis oferte \n";
+		cout<<"4.Stergere oferta \n";
+		cout<<"5.Afisare oferta cea mai avantajoasa \n";
+		cout<<"0.Iesire \n";
+		cout<<"Dati optiunea dvs: ";
+		cin>>opt;
+		switch(opt)
+		{
+		    case 1:
+				introducere(l,1);
+			break;
+			case 2:
+				introducere(l,2);
+			break;
+			case 3:
+				l.afisare_lista();
+			break;
+			case 4:
+				char nume[20];
+				cout<<"ntrod numele dupa care se sterge: ";
+				cin>>nume;
+				l.stergere(nume);
+			break;
+			case 5:
+				l.oferta_avantajoasa();
+			break;
+			case 0:
+			break;
+
+		}
+	}while(opt!=0);
+	getch();
+	return 0;
+}
